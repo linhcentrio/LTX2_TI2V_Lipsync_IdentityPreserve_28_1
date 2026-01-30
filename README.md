@@ -1,0 +1,2 @@
+# LTX2_TI2V_Lipsync_IdentityPreserve_28_1
+LTX2_TI2V_Lipsync_IdentityPreserve_28_1

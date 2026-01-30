@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+
+# Virtual Environment
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Models (large files)
+models/*.safetensors
+models/*.ckpt
+models/*.pth
+models/*.pt
+models/*.bin
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+
+# Output
+output/
+input/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.ogg
+*.flac
+
+# Images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+
+# Secrets & Config
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+config.json
+secrets.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+*.backup
+*~

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  ltx2-video:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: linhcentrio/ltx2-video:latest
+    container_name: ltx2-video-generation
+    
+    environment:
+      - COMFYUI_URL=http://127.0.0.1:8188
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
+    
+    ports:
+      - "8188:8188"
+    
+    volumes:
+      - ./models:/workspace/models
+      - ./output:/workspace/output
+      - ./input:/workspace/input
+      - ./workflows:/workspace/workflows
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    restart: unless-stopped
+    
+    command: ["/workspace/start.sh"]
+
+volumes:
+  models:
+  output:
+  input:

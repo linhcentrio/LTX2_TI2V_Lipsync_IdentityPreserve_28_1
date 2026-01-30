@@ -1,21 +1,16 @@
 # ============================================
-# LTX2 Video Generation - RunPod Serverless
-# CUDA 12.8 + Flash-Attention 3
+# LTX2 T2I2V Lipsync - Docker Image
 # ============================================
+# Base image: RunPod PyTorch with CUDA 12.8
+FROM runpod/pytorch:2.5.1-py3.11-cuda12.8.0-devel-ubuntu22.04
 
-FROM nvidia/cuda:12.8.0-cudnn9-devel-ubuntu22.04 AS base
+# Set working directory
+WORKDIR /workspace
 
-# Environment
-ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHONUNBUFFERED=1 \
-    CUDA_HOME=/usr/local/cuda \
-    PATH="/usr/local/cuda/bin:${PATH}" \
-    LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
-
-# Install system dependencies
+# ============================================
+# System Dependencies
+# ============================================
 RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3-pip \
     git \
     wget \
     curl \
@@ -25,74 +20,92 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     libglib2.0-0 \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN python3 -m pip install --upgrade pip setuptools wheel
+# ============================================
+# Install Flash-Attention 3 (CUDA 12.8)
+# ============================================
+RUN pip install packaging ninja
+RUN pip install flash-attn --no-build-isolation
 
 # ============================================
-# Stage 2: ComfyUI Installation
+# Install ComfyUI
 # ============================================
-FROM base AS comfyui
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
-WORKDIR /workspace
+WORKDIR /workspace/ComfyUI
 
-# Clone ComfyUI
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git && \
-    cd ComfyUI && \
-    pip install -r requirements.txt
-
-# Install Flash-Attention 3 (CUDA 12.8 compatible)
-RUN pip install flash-attn==2.5.8 --no-build-isolation
-
-# Install LTX-2 Custom Nodes
-RUN cd /workspace/ComfyUI/custom_nodes && \
-    git clone https://github.com/Lightricks/ComfyUI-LTXVideo && \
-    cd ComfyUI-LTXVideo && \
-    pip install -r requirements.txt
-
-# Install Lipsync Custom Nodes
-RUN cd /workspace/ComfyUI/custom_nodes && \
-    git clone https://github.com/guoyww/AnimateDiff.git && \
-    cd AnimateDiff && \
-    pip install -r requirements.txt
-
-# Install Face Restoration (Identity Preservation)
-RUN cd /workspace/ComfyUI/custom_nodes && \
-    git clone https://github.com/TencentARC/GFPGAN.git && \
-    cd GFPGAN && \
-    pip install -r requirements.txt
-
-# ============================================
-# Stage 3: Application
-# ============================================
-FROM comfyui AS app
-
-WORKDIR /workspace
-
-# Copy application code
-COPY requirements.txt .
+# Install ComfyUI dependencies
 RUN pip install -r requirements.txt
 
-COPY src/ ./src/
-COPY workflows/ ./workflows/
+# Install custom nodes for LTX-2
+WORKDIR /workspace/ComfyUI/custom_nodes
 
-# Create directories
-RUN mkdir -p /workspace/input /workspace/output /workspace/models
+# LTX-Video custom node
+RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git
+WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI-LTXVideo
+RUN pip install -r requirements.txt
 
-# Download models (optional - comment out if models are in volume)
-# RUN wget -O /workspace/models/ltx2_pro.safetensors \
-#     "https://huggingface.co/Lightricks/LTX-Video-2/resolve/main/ltx2_pro.safetensors"
+# Wav2Lip for lipsync
+WORKDIR /workspace/ComfyUI/custom_nodes
+RUN git clone https://github.com/ShmuelRonen/ComfyUI-Wav2Lip.git
+WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI-Wav2Lip
+RUN pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt"
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8188/system_stats || exit 1
+# IPAdapter for identity preservation
+WORKDIR /workspace/ComfyUI/custom_nodes
+RUN git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git
+WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI_IPAdapter_plus
+RUN pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt"
 
-# Expose ports
+# ============================================
+# Install Application Dependencies
+# ============================================
+WORKDIR /workspace
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ============================================
+# Copy Application Code
+# ============================================
+COPY src/ /workspace/src/
+COPY workflows/ /workspace/workflows/
+
+# ============================================
+# Create Directories
+# ============================================
+RUN mkdir -p /workspace/models \
+    /workspace/output \
+    /workspace/input \
+    /workspace/logs
+
+# ============================================
+# Environment Variables
+# ============================================
+ENV PYTHONUNBUFFERED=1 \
+    COMFYUI_URL=http://127.0.0.1:8188 \
+    CUDA_VISIBLE_DEVICES=0
+
+# ============================================
+# Expose Ports
+# ============================================
 EXPOSE 8188
 
-# Start script
-COPY start.sh /workspace/start.sh
-RUN chmod +x /workspace/start.sh
+# ============================================
+# Healthcheck
+# ============================================
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8188/system_stats || exit 1
 
-CMD ["/workspace/start.sh"]
+# ============================================
+# Startup Script
+# ============================================
+COPY docker-entrypoint.sh /workspace/
+RUN chmod +x /workspace/docker-entrypoint.sh
+
+ENTRYPOINT ["/workspace/docker-entrypoint.sh"]
+
+# Default command: Start RunPod handler
+CMD ["python", "-u", "-m", "src.rp_handler"]

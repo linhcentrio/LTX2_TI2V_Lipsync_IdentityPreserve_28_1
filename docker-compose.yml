@@ -1,44 +1,69 @@
+# ============================================
+# LTX2 T2I2V Lipsync - Docker Compose
+# ============================================
 version: '3.8'
 
 services:
-  ltx2-video:
+  ltx2-lipsync:
     build:
       context: .
       dockerfile: Dockerfile
-    image: linhcentrio/ltx2-video:latest
-    container_name: ltx2-video-generation
+    image: ltx2-lipsync:latest
+    container_name: ltx2-lipsync
     
-    environment:
-      - COMFYUI_URL=http://127.0.0.1:8188
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
-    
-    ports:
-      - "8188:8188"
-    
-    volumes:
-      - ./models:/workspace/models
-      - ./output:/workspace/output
-      - ./input:/workspace/input
-      - ./workflows:/workspace/workflows
-    
+    # GPU Configuration
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
     
+    # Environment Variables
+    env_file:
+      - .env
+    
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+    
+    # Ports
+    ports:
+      - "8188:8188"  # ComfyUI
+    
+    # Volumes
+    volumes:
+      - ./models:/workspace/models
+      - ./output:/workspace/output
+      - ./input:/workspace/input
+      - ./logs:/workspace/logs
+      - ./workflows:/workspace/workflows
+    
+    # Restart Policy
     restart: unless-stopped
     
-    command: ["/workspace/start.sh"]
+    # Health Check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188/system_stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Resource Limits
+    shm_size: '8gb'
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-volumes:
-  models:
-  output:
-  input:
+# ============================================
+# Networks
+# ============================================
+networks:
+  default:
+    name: ltx2-network

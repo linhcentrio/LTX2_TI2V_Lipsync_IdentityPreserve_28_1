@@ -1,8 +1,8 @@
 # ============================================
-# LTX2 T2I2V Lipsync - Docker Image
+# LTX2 T2I2V Lipsync - Optimized Dockerfile
 # ============================================
-# Base image: RunPod PyTorch with CUDA 12.8
-FROM runpod/pytorch:2.5.1-py3.11-cuda12.8.0-devel-ubuntu22.04
+# Base: RunPod ComfyUI with CUDA support
+FROM runpod/comfyui:latest
 
 # Set working directory
 WORKDIR /workspace
@@ -24,40 +24,31 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# Install Flash-Attention 3 (CUDA 12.8)
+# Install Flash-Attention 3 (Optional)
 # ============================================
-RUN pip install packaging ninja
-RUN pip install flash-attn --no-build-isolation
+# Uncomment if you need Flash-Attention 3
+# RUN pip install packaging ninja && \
+#     pip install flash-attn --no-build-isolation
 
 # ============================================
-# Install ComfyUI
+# Install LTX-Video Custom Node
 # ============================================
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
-
-WORKDIR /workspace/ComfyUI
-
-# Install ComfyUI dependencies
-RUN pip install -r requirements.txt
-
-# Install custom nodes for LTX-2
-WORKDIR /workspace/ComfyUI/custom_nodes
+WORKDIR /comfyui/custom_nodes
 
 # LTX-Video custom node
-RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git
-WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI-LTXVideo
-RUN pip install -r requirements.txt
+RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git && \
+    cd ComfyUI-LTXVideo && \
+    pip install -r requirements.txt
 
 # Wav2Lip for lipsync
-WORKDIR /workspace/ComfyUI/custom_nodes
-RUN git clone https://github.com/ShmuelRonen/ComfyUI-Wav2Lip.git
-WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI-Wav2Lip
-RUN pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt"
+RUN git clone https://github.com/ShmuelRonen/ComfyUI-Wav2Lip.git && \
+    cd ComfyUI-Wav2Lip && \
+    (pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt for Wav2Lip")
 
 # IPAdapter for identity preservation
-WORKDIR /workspace/ComfyUI/custom_nodes
-RUN git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git
-WORKDIR /workspace/ComfyUI/custom_nodes/ComfyUI_IPAdapter_plus
-RUN pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt"
+RUN git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git && \
+    cd ComfyUI_IPAdapter_plus && \
+    (pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt for IPAdapter")
 
 # ============================================
 # Install Application Dependencies
@@ -86,7 +77,8 @@ RUN mkdir -p /workspace/models \
 # ============================================
 ENV PYTHONUNBUFFERED=1 \
     COMFYUI_URL=http://127.0.0.1:8188 \
-    CUDA_VISIBLE_DEVICES=0
+    CUDA_VISIBLE_DEVICES=0 \
+    COMFYUI_PATH=/comfyui
 
 # ============================================
 # Expose Ports

@@ -1,4 +1,6 @@
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,87 +25,165 @@ share/python-wheels/
 *.egg
 PIPFILE.lock
 
-# Virtual Environment
+# ============================================
+# Virtual Environments
+# ============================================
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.virtualenv/
 
-# Models (large files)
+# ============================================
+# Models & Large Files
+# ============================================
 models/*.safetensors
 models/*.ckpt
 models/*.pth
 models/*.pt
 models/*.bin
-*.safetensors
-*.ckpt
-*.pth
-*.pt
+models/*.onnx
+*.weights
+*.h5
 
-# Output
+# ============================================
+# Output Files
+# ============================================
 output/
 input/
+temp/
+tmp/
 *.mp4
 *.avi
 *.mov
 *.mkv
+*.webm
+*.flv
 *.wav
 *.mp3
-*.ogg
 *.flac
-
-# Images
+*.aac
+*.ogg
+*.m4a
 *.jpg
 *.jpeg
 *.png
 *.gif
 *.bmp
 *.tiff
+*.webp
+*.svg
 
-# Secrets & Config
+# ============================================
+# Secrets & Credentials
+# ============================================
 .env
 .env.local
 .env.*.local
 *.pem
 *.key
+*.cert
 *.crt
+secrets/
+credentials/
 config.json
 secrets.json
 
-# IDE
+# ============================================
+# IDE & Editors
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
-*.swn
+*~
 .DS_Store
 *.sublime-project
 *.sublime-workspace
+.spyderproject
+.spyproject
+.ropeproject
 
-# Jupyter
-.ipynb_checkpoints/
+# ============================================
+# Jupyter Notebook
+# ============================================
+.ipynb_checkpoints
 *.ipynb
 
-# Docker
-*.log
-docker-compose.override.yml
-
-# OS
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
+# ============================================
 # Testing
+# ============================================
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
 
-# Temporary
+# ============================================
+# Logs
+# ============================================
+*.log
+logs/
+*.out
+*.err
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Docker
+# ============================================
+*.dockerfile.swp
+docker-compose.override.yml
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Temporary Files
+# ============================================
 *.tmp
-*.temp
 *.bak
-*.backup
-*~
+*.swp
+*.cache
+
+# ============================================
+# ComfyUI Specific
+# ============================================
+ComfyUI/output/
+ComfyUI/input/
+ComfyUI/temp/
+ComfyUI/models/checkpoints/*.safetensors
+ComfyUI/models/checkpoints/*.ckpt
+ComfyUI/custom_nodes/*/
+
+# ============================================
+# Project Specific
+# ============================================
+workspace/
+checkpoints/
+runs/
+experiments/
+data/raw/
+data/processed/
+
+# Keep empty directories
+!.gitkeep

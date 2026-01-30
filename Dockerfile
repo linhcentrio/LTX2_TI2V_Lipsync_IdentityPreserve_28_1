@@ -40,10 +40,25 @@ RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git && \
     cd ComfyUI-LTXVideo && \
     pip install -r requirements.txt
 
-# Wav2Lip for lipsync
-RUN git clone https://github.com/ShmuelRonen/ComfyUI-Wav2Lip.git && \
-    cd ComfyUI-Wav2Lip && \
-    (pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt for Wav2Lip")
+# ============================================
+# Lipsync Nodes (Choose one or both)
+# ============================================
+
+# Option 1: Wav2Lip (Classic, widely used)
+# FIXED: Use correct repo URL with underscore
+RUN git clone https://github.com/ShmuelRonen/ComfyUI_wav2lip.git && \
+    cd ComfyUI_wav2lip && \
+    pip install -r requirements.txt
+
+# Option 2: LatentSync (Modern, better quality, low VRAM)
+# Uncomment if you prefer LatentSync over Wav2Lip
+# RUN git clone https://github.com/ShmuelRonen/ComfyUI-LatentSyncWrapper.git && \
+#     cd ComfyUI-LatentSyncWrapper && \
+#     pip install -r requirements.txt
+
+# ============================================
+# Identity Preservation Nodes
+# ============================================
 
 # IPAdapter for identity preservation
 RUN git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus.git && \
